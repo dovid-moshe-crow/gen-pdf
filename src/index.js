@@ -21,9 +21,14 @@ app.post("/pdf-table", async (req, res) => {
   res.setHeader("Content-Type", "application/pdf");
   res.setHeader("Content-Disposition", "attachment; filename=table.pdf");
 
+  console.log([
+    Object.keys(data[0]).map(x => headers[x]),
+    [...data.map((x) => [...Object.values(x)])],
+  ])
+
   const table = (await import("markdown-table")).markdownTable([
     Object.keys(data[0]).map(x => headers[x]),
-    [...data.slice(1).map((x) => Object.values(x))],
+    [...data.map((x) => [...Object.values(x)])],
   ], { align: "c" });
 
 
