@@ -3,11 +3,14 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
+  "bin": "src/index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "nodemon src/index.js",
-    "run": "node src/index.js"
+    "run": "node src/index.js --",
+    "build": "pkg . --targets node14-win-x64"
   },
+
   "keywords": [],
   "author": "dovid-moshe-crow",
   "license": "ISC",
