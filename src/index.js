@@ -16,7 +16,7 @@ app.post("/pdf-table", async (req, res) => {
   const table = (await import("markdown-table")).markdownTable([
     Object.keys(data[0]).map(x => headers[x]),
     [...data.slice(1).map((x) => Object.values(x))],
-  ]);
+  ],{align:"c"});
 
   console.log(table);
 
