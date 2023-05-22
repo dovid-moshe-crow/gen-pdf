@@ -2,8 +2,8 @@ const express = require("express");
 const { mdToPdf } = require("md-to-pdf");
 const { ArgumentParser } = require('argparse');
 const multer = require('multer');
-const fs = require('fs');
-const { PDFDocument } = require('pdf-lib');
+const { exec } = require('child_process');
+
 const upload = multer({ dest: 'uploads/' });
 
 const parser = new ArgumentParser({
@@ -39,53 +39,53 @@ app.post("/pdf-table", async (req, res) => {
   res.send(pdf.content);
 });
 
-app.post('/convert-to-pdf', upload.single('file'), async (req, res) => {
-  const { originalname, path } = req.file;
-  const fileType = originalname.split('.').pop().toLowerCase();
-  const pdfPath = `converted/${originalname}.pdf`;
+app.post('/convert', upload.single('file'), (req, res) => {
+  const filePath = path.join(__dirname, req.file.path);
+  const outputPath = path.join(__dirname, 'output', Date.now() + '.pdf');
 
-  try {
-    const pdfDoc = await PDFDocument.create();
-
-    if (fileType === 'doc' || fileType === 'docx') {
-      // Convert Word document to PDF
-      const docBytes = fs.readFileSync(path);
-      const docPdf = await pdfDoc.embedFont(docBytes);
-      const docPage = pdfDoc.addPage();
-      docPage.setFont(docPdf);
-      docPage.drawText('Converted from Word document');
-
-    } else if (fileType === 'jpg' || fileType === 'jpeg' || fileType === 'png') {
-      // Convert image to PDF
-      const image = await pdfDoc.embedJpg(fs.readFileSync(path));
-      const imagePage = pdfDoc.addPage();
-      imagePage.drawImage(image, { x: 0, y: 0 });
-
-    } else if (fileType === 'xlsx' || fileType === 'xls') {
-      // Convert Excel file to PDF (sample implementation)
-      const excelText = fs.readFileSync(path, 'utf-8');
-      const excelPage = pdfDoc.addPage();
-      excelPage.drawText('Converted from Excel file');
-      excelPage.drawText(excelText, { y: 500 });
-
-    } else {
-      throw new Error('Invalid file format');
+  exec(`unoconv -f pdf -o ${outputPath} ${filePath}`, (err) => {
+    if (err) {
+      console.error(err);
+      res.status(500).send("Error converting file");
+      return;
     }
 
-    const pdfBytes = await pdfDoc.save();
-    fs.writeFileSync(pdfPath, pdfBytes);
+    // Once the file is converted, delete the original file
+    fs.unlink(filePath, (err) => {
+      if (err) {
+        console.error("Error deleting original file:", err);
+      }
+    });
 
-    const pdfData = fs.readFileSync(pdfPath);
-    res.contentType('application/pdf');
-    res.send(pdfData);
-  } catch (error) {
-    res.status(500).send({ error: error.message });
-  } finally {
-    // Delete the uploaded file and the converted PDF file
-    fs.unlinkSync(path);
-    fs.unlinkSync(pdfPath);
-  }
+    res.download(outputPath, (err) => {
+      if (err) {
+        console.error(err);
+        res.status(500).send("Error downloading file");
+        return;
+      }
+
+      // Delete the converted file after download
+      res.on('finish', () => {
+        fs.unlink(outputPath, (err) => {
+          if (err) {
+            console.error("Error deleting converted file:", err);
+          }
+        });
+      });
+    });
+  });
 });
+
+
+app.get('/', (req, res) => {
+  res.send(`
+    <form action="/convert" method="post" enctype="multipart/form-data">
+      <input type="file" name="file" accept=".pptx,.docx,.xlsx,.jpg,.png,.gif,.bmp,.tiff,.txt,.csv,.html,.rtf">
+      <button type="submit">Convert to PDF</button>
+    </form>
+  `);
+});
+
 
 
 
