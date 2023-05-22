@@ -2,6 +2,7 @@ const express = require("express");
 const { mdToPdf } = require("md-to-pdf");
 const { ArgumentParser } = require('argparse');
 const multer = require('multer');
+const libre = require('libreoffice-convert');
 const { exec } = require('child_process');
 
 const upload = multer({ dest: 'uploads/' });
@@ -42,13 +43,17 @@ app.post("/pdf-table", async (req, res) => {
 app.post('/convert', upload.single('file'), (req, res) => {
   const filePath = path.join(__dirname, req.file.path);
   const outputPath = path.join(__dirname, 'output', Date.now() + '.pdf');
+  const extend = '.pdf';
 
-  exec(`unoconv -f pdf -o ${outputPath} ${filePath}`, (err) => {
+  const file = fs.readFileSync(filePath);
+  libre.convert(file, extend, undefined, (err, done) => {
     if (err) {
-      console.error(err);
+      console.log(`Error converting file: ${err}`);
       res.status(500).send("Error converting file");
       return;
     }
+
+    fs.writeFileSync(outputPath, done);
 
     // Once the file is converted, delete the original file
     fs.unlink(filePath, (err) => {
@@ -76,7 +81,6 @@ app.post('/convert', upload.single('file'), (req, res) => {
   });
 });
 
-
 app.get('/', (req, res) => {
   res.send(`
     <form action="/convert" method="post" enctype="multipart/form-data">
@@ -89,7 +93,7 @@ app.get('/', (req, res) => {
 
 
 
-const port  = parser.parse_args().port;
+const port = parser.parse_args().port;
 
 // Start the server
 app.listen(port, () => {
