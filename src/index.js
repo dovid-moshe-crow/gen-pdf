@@ -8,7 +8,7 @@ const path = require('path');
 const fs = require("fs");
 
 
-const upload = multer({ dest: 'uploads/' });
+const upload = multer({ dest: '../uploads/' });
 
 const parser = new ArgumentParser({
   description: 'GEN PDF'
@@ -44,8 +44,8 @@ app.post("/pdf-table", async (req, res) => {
 });
 
 app.post('/convert', upload.single('file'), (req, res) => {
-  const filePath = path.join(__dirname, req.file.path);
-  const outputPath = path.join(__dirname, 'output', Date.now() + '.pdf');
+  const filePath = path.join(__dirname, '../uploads/', req.file.filename);
+  const outputPath = path.join(__dirname, '../output/', Date.now() + '.pdf');
   const extend = '.pdf';
 
   const file = fs.readFileSync(filePath);
