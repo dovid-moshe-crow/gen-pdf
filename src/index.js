@@ -7,7 +7,19 @@ const { exec } = require('child_process');
 const path = require('path');
 const fs = require("fs");
 
-const upload = multer({ dest: 'uploads' });
+
+var storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+      cb(null, 'uploads')
+  },
+  filename: function (req, file, cb) {
+      let ext = file.originalname.substring(file.originalname.lastIndexOf('.'), file.originalname.length);
+      cb(null, Date.now() + ext)
+  }
+});
+const upload = multer({
+  storage: storage
+}).any();
 
 if(!fs.existsSync("output"))
   fs.mkdirSync("output")
@@ -19,6 +31,13 @@ const parser = new ArgumentParser({
 parser.add_argument("-p=", "--port", { help: 'the port number' });
 
 const app = express();
+
+const timeoutMiddleware = (req, res, next) => {
+  req.setTimeout(180000); // 3 minutes in milliseconds
+  next();
+};
+
+app.use(timeoutMiddleware);
 
 app.use(express.json({limit: '50mb'}));
 app.use(express.urlencoded({limit: '50mb'}));
@@ -101,6 +120,8 @@ app.get('/', (req, res) => {
 
 
 const port = parser.parse_args().port;
+
+
 
 // Start the server
 app.listen(port, () => {
