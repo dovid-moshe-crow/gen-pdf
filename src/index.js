@@ -19,7 +19,7 @@ var storage = multer.diskStorage({
 });
 const upload = multer({
   storage: storage
-}).any();
+});
 
 if(!fs.existsSync("output"))
   fs.mkdirSync("output")
