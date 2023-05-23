@@ -7,8 +7,9 @@ const { exec } = require('child_process');
 const path = require('path');
 const fs = require("fs");
 
+const upload = multer({ dest: 'uploads' });
 
-const upload = multer({ dest: '../uploads/' });
+fs.mkdirSync("output")
 
 const parser = new ArgumentParser({
   description: 'GEN PDF'
