@@ -10,18 +10,18 @@ const fs = require("fs");
 
 var storage = multer.diskStorage({
   destination: function (req, file, cb) {
-      cb(null, 'uploads')
+    cb(null, 'uploads')
   },
   filename: function (req, file, cb) {
-      let ext = file.originalname.substring(file.originalname.lastIndexOf('.'), file.originalname.length);
-      cb(null, Date.now() + ext)
+    let ext = file.originalname.substring(file.originalname.lastIndexOf('.'), file.originalname.length);
+    cb(null, Date.now() + ext)
   }
 });
 const upload = multer({
   storage: storage
 });
 
-if(!fs.existsSync("output"))
+if (!fs.existsSync("output"))
   fs.mkdirSync("output")
 
 const parser = new ArgumentParser({
@@ -39,8 +39,8 @@ const timeoutMiddleware = (req, res, next) => {
 
 app.use(timeoutMiddleware);
 
-app.use(express.json({limit: '50mb'}));
-app.use(express.urlencoded({limit: '50mb'}));
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb' }));
 
 
 
@@ -69,8 +69,7 @@ app.post("/pdf-table", async (req, res) => {
 app.post('/convert', upload.single('file'), (req, res) => {
   const filePath = path.join(__dirname, '../uploads/', req.file.filename);
   const outputPath = path.join(__dirname, '../output/', Date.now() + '.pdf');
-
-  console.log(req.file.filename.split(".")[1])
+  const ext = req.file.filename.split(".")[1];
 
   const extend = '.pdf';
 
