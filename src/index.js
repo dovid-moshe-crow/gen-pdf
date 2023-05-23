@@ -70,7 +70,7 @@ app.post('/convert', upload.single('file'), (req, res) => {
   const filePath = path.join(__dirname, '../uploads/', req.file.filename);
   const outputPath = path.join(__dirname, '../output/', Date.now() + '.pdf');
 
-  console.log(req.body.filename.split(".")[1])
+  console.log(req.file.fieldname.split(".")[1])
 
   const extend = '.pdf';
 
