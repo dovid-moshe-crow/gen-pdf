@@ -9,7 +9,8 @@ const fs = require("fs");
 
 const upload = multer({ dest: 'uploads' });
 
-fs.mkdirSync("output")
+if(!fs.existsSync("output"))
+  fs.mkdirSync("output")
 
 const parser = new ArgumentParser({
   description: 'GEN PDF'
@@ -18,7 +19,9 @@ const parser = new ArgumentParser({
 parser.add_argument("-p=", "--port", { help: 'the port number' });
 
 const app = express();
-app.use(express.json());
+
+app.use(express.json({limit: '50mb'}));
+app.use(express.urlencoded({limit: '50mb'}));
 
 
 
