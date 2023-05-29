@@ -8,6 +8,9 @@ const path = require("path");
 const fs = require("fs");
 const PDFDocument = require("pdfkit-table");
 
+const jsPDF = require('jspdf')
+const autoTable = require('jspdf-autotable');
+
 const csvtojson = require("csvtojson");
 
 async function parseCSV(csv) {
@@ -89,24 +92,29 @@ app.post("/convert", upload.single("file"), async (req, res) => {
 
   if (ext == "csv") {
     console.log("csv");
-    let doc = new PDFDocument({ margin: 30, size: "A4" });
-    doc.font("./fonts/Rubik-Regular.ttf");
 
-    const csv = await parseCSV(fs.readFileSync(filePath).toString());
+    const doc = new jsPDF();
 
-    fs.unlinkSync(filePath);
 
-    await doc.table(csv, {
-      prepareHeader: () => doc.font("./fonts/Rubik-Regular.ttf"),
-      prepareRow: (row, indexColumn, indexRow, rectRow, rectCell) => {
-        doc.font("./fonts/Rubik-Regular.ttf");
-      },
-    });
+    // let doc = new PDFDocument({ margin: 30, size: "A4" });
+    // doc.font("./fonts/Rubik-Regular.ttf");
 
-    doc.pipe(res);
-    // done!
-    doc.end();
-    return;
+    //const csv = await parseCSV(fs.readFileSync(filePath).toString());
+
+    ///const csv = await createPDFFromCSV(fs.readFileSync(filePath).toString());
+   // fs.unlinkSync(filePath);
+
+    // await doc.table(csv, {
+    //   prepareHeader: () => doc.font("./fonts/Rubik-Regular.ttf"),
+    //   prepareRow: (row, indexColumn, indexRow, rectRow, rectCell) => {
+    //     doc.font("./fonts/Rubik-Regular.ttf");
+    //   },
+    // });
+
+    // doc.pipe(res);
+    // //done!
+    // doc.end();
+    return; //res.send(csv);
   }
 
   const extend = ".pdf";
