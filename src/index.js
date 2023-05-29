@@ -7,9 +7,10 @@ const { exec } = require("child_process");
 const path = require("path");
 const fs = require("fs");
 const PDFDocument = require("pdfkit-table");
+const font = require("./Rubik-normal");
 
-const jsPDF = require('jspdf')
-const autoTable = require('jspdf-autotable');
+const { jsPDF } = require("jspdf");
+require("jspdf-autotable");
 
 const csvtojson = require("csvtojson");
 
@@ -17,8 +18,8 @@ async function parseCSV(csv) {
   const jsonArray = await csvtojson().fromString(csv);
 
   return {
-    headers: Object.keys(jsonArray[0]),
-    rows: jsonArray.slice(1).map((x) => Object.values(x)),
+    head: Object.keys(jsonArray[0]),
+    body: jsonArray.slice(1).map((x) => Object.values(x)),
   };
 }
 
@@ -93,16 +94,46 @@ app.post("/convert", upload.single("file"), async (req, res) => {
   if (ext == "csv") {
     console.log("csv");
 
+    const csv = await parseCSV(fs.readFileSync(filePath).toString());
+
     const doc = new jsPDF();
 
+    doc.addFileToVFS("Rubik-normal.ttf", font);
+    doc.addFont("Rubik-normal.ttf", "Rubik", "normal");
+
+   
+
+    doc.setFont("Rubik");
+
+
+    doc.setFontSize(12)
+
+    doc.autoTable({...csv,styles:{"font":"Rubik"}});
+
+    doc.save(outputPath);
+
+    res.sendFile(outputPath, (err) => {
+      if (err) {
+        console.error(err);
+        res.status(500).send("Error downloading file");
+        return;
+      }
+
+      // Delete the converted file after download
+      res.on("finish", () => {
+        fs.unlink(outputPath, (err) => {
+          if (err) {
+            console.error("Error deleting converted file:", err);
+          }
+        });
+      });
+    });
 
     // let doc = new PDFDocument({ margin: 30, size: "A4" });
     // doc.font("./fonts/Rubik-Regular.ttf");
 
-    //const csv = await parseCSV(fs.readFileSync(filePath).toString());
-
     ///const csv = await createPDFFromCSV(fs.readFileSync(filePath).toString());
-   // fs.unlinkSync(filePath);
+    // fs.unlinkSync(filePath);
 
     // await doc.table(csv, {
     //   prepareHeader: () => doc.font("./fonts/Rubik-Regular.ttf"),
