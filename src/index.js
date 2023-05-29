@@ -81,7 +81,7 @@ app.post("/pdf-table", async (req, res) => {
 
 app.post("/convert", upload.single("file"), async (req, res) => {
   res.setHeader("Content-Type", "application/pdf");
-  res.setHeader("Content-Disposition", "attachment; filename=table.pdf");
+  res.setHeader("Content-Disposition", "inline; filename=table.pdf");
 
   let filePath = path.join(__dirname, "../uploads/", req.file.filename);
   const outputPath = path.join(__dirname, "../output/", Date.now() + ".pdf");
@@ -94,7 +94,7 @@ app.post("/convert", upload.single("file"), async (req, res) => {
 
     const csv = await parseCSV(fs.readFileSync(filePath).toString());
 
-    console.log(csv);
+    fs.unlinkSync(filePath);
 
     await doc.table(csv, {
       prepareHeader: () => doc.font("./fonts/Rubik-Regular.ttf"),
