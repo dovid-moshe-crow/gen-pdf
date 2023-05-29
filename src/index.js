@@ -1,34 +1,47 @@
 const express = require("express");
 const { mdToPdf } = require("md-to-pdf");
-const { ArgumentParser } = require('argparse');
-const multer = require('multer');
-const libre = require('libreoffice-convert');
-const { exec } = require('child_process');
-const path = require('path');
+const { ArgumentParser } = require("argparse");
+const multer = require("multer");
+const libre = require("libreoffice-convert");
+const { exec } = require("child_process");
+const path = require("path");
 const fs = require("fs");
+const PDFDocument = require("pdfkit-table");
 
+const csvtojson = require("csvtojson");
+
+async function parseCSV(csv) {
+  const jsonArray = await csvtojson().fromString(csv);
+
+  return {
+    headers: Object.keys(jsonArray[0]),
+    rows: jsonArray.slice(1).map((x) => Object.values(x)),
+  };
+}
 
 var storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, 'uploads')
+    cb(null, "uploads");
   },
   filename: function (req, file, cb) {
-    let ext = file.originalname.substring(file.originalname.lastIndexOf('.'), file.originalname.length);
-    cb(null, Date.now() + ext)
-  }
+    let ext = file.originalname.substring(
+      file.originalname.lastIndexOf("."),
+      file.originalname.length
+    );
+    cb(null, Date.now() + ext);
+  },
 });
 const upload = multer({
-  storage: storage
+  storage: storage,
 });
 
-if (!fs.existsSync("output"))
-  fs.mkdirSync("output")
+if (!fs.existsSync("output")) fs.mkdirSync("output");
 
 const parser = new ArgumentParser({
-  description: 'GEN PDF'
+  description: "GEN PDF",
 });
 
-parser.add_argument("-p=", "--port", { help: 'the port number' });
+parser.add_argument("-p=", "--port", { help: "the port number" });
 
 const app = express();
 
@@ -39,10 +52,8 @@ const timeoutMiddleware = (req, res, next) => {
 
 app.use(timeoutMiddleware);
 
-app.use(express.json({ limit: '50mb' }));
-app.use(express.urlencoded({ limit: '50mb' }));
-
-
+app.use(express.json({ limit: "50mb" }));
+app.use(express.urlencoded({ limit: "50mb" }));
 
 app.post("/pdf-table", async (req, res) => {
   const { data, headers } = req.body;
@@ -53,11 +64,13 @@ app.post("/pdf-table", async (req, res) => {
   res.setHeader("Content-Type", "application/pdf");
   res.setHeader("Content-Disposition", "attachment; filename=table.pdf");
 
-  const table = (await import("markdown-table")).markdownTable([
-    Object.keys(data[0]).map(x => headers[x]),
-    ...data.map((x) => [...Object.values(x)]),
-  ], { align: "c" });
-
+  const table = (await import("markdown-table")).markdownTable(
+    [
+      Object.keys(data[0]).map((x) => headers[x]),
+      ...data.map((x) => [...Object.values(x)]),
+    ],
+    { align: "c" }
+  );
 
   const pdf = await mdToPdf({ content: table });
   // Create a new page
@@ -66,12 +79,37 @@ app.post("/pdf-table", async (req, res) => {
   res.send(pdf.content);
 });
 
-app.post('/convert', upload.single('file'), (req, res) => {
-  const filePath = path.join(__dirname, '../uploads/', req.file.filename);
-  const outputPath = path.join(__dirname, '../output/', Date.now() + '.pdf');
+app.post("/convert", upload.single("file"), async (req, res) => {
+  res.setHeader("Content-Type", "application/pdf");
+  res.setHeader("Content-Disposition", "attachment; filename=table.pdf");
+
+  let filePath = path.join(__dirname, "../uploads/", req.file.filename);
+  const outputPath = path.join(__dirname, "../output/", Date.now() + ".pdf");
   const ext = req.file.filename.split(".")[1];
 
-  const extend = '.pdf';
+  if (ext == "csv") {
+    console.log("csv");
+    let doc = new PDFDocument({ margin: 30, size: "A4" });
+    doc.font("./fonts/Rubik-Regular.ttf");
+
+    const csv = await parseCSV(fs.readFileSync(filePath).toString());
+
+    console.log(csv);
+
+    await doc.table(csv, {
+      prepareHeader: () => doc.font("./fonts/Rubik-Regular.ttf"),
+      prepareRow: (row, indexColumn, indexRow, rectRow, rectCell) => {
+        doc.font("./fonts/Rubik-Regular.ttf");
+      },
+    });
+
+    doc.pipe(res);
+    // done!
+    doc.end();
+    return;
+  }
+
+  const extend = ".pdf";
 
   const file = fs.readFileSync(filePath);
   libre.convert(file, extend, undefined, (err, done) => {
@@ -90,7 +128,7 @@ app.post('/convert', upload.single('file'), (req, res) => {
       }
     });
 
-    res.download(outputPath, (err) => {
+    res.sendFile(outputPath, (err) => {
       if (err) {
         console.error(err);
         res.status(500).send("Error downloading file");
@@ -98,7 +136,7 @@ app.post('/convert', upload.single('file'), (req, res) => {
       }
 
       // Delete the converted file after download
-      res.on('finish', () => {
+      res.on("finish", () => {
         fs.unlink(outputPath, (err) => {
           if (err) {
             console.error("Error deleting converted file:", err);
@@ -109,7 +147,7 @@ app.post('/convert', upload.single('file'), (req, res) => {
   });
 });
 
-app.get('/', (req, res) => {
+app.get("/", (req, res) => {
   res.send(`
     <form action="/convert" method="post" enctype="multipart/form-data">
       <input type="file" name="file" accept=".pptx,.docx,.xlsx,.jpg,.png,.gif,.bmp,.tiff,.txt,.csv,.html,.rtf">
@@ -118,12 +156,7 @@ app.get('/', (req, res) => {
   `);
 });
 
-
-
-
 const port = parser.parse_args().port;
-
-
 
 // Start the server
 app.listen(port, () => {
