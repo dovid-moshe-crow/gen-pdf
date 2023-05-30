@@ -18,7 +18,7 @@ async function parseCSV(csv) {
   const jsonArray = await csvtojson().fromString(csv);
 
   return {
-    head: Object.keys(jsonArray[0]),
+    head: [Object.keys(jsonArray[0])],
     body: jsonArray.slice(1).map((x) => Object.values(x)),
   };
 }
@@ -97,18 +97,16 @@ app.post("/convert", upload.single("file"), async (req, res) => {
     const csv = await parseCSV(fs.readFileSync(filePath).toString());
 
     const doc = new jsPDF();
+    doc.setR2L(true);
 
     doc.addFileToVFS("Rubik-normal.ttf", font);
     doc.addFont("Rubik-normal.ttf", "Rubik", "normal");
 
-   
-
     doc.setFont("Rubik");
 
+    doc.setFontSize(12);
 
-    doc.setFontSize(12)
-
-    doc.autoTable({...csv,styles:{"font":"Rubik"}});
+    doc.autoTable({ ...csv, styles: { font: "Rubik",halign:"center" } });
 
     doc.save(outputPath);
 
