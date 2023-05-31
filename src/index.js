@@ -96,7 +96,7 @@ app.post("/convert", upload.single("file"), async (req, res) => {
 
     const csv = await parseCSV(fs.readFileSync(filePath).toString());
 
-    const doc = new jsPDF();
+    const doc = new jsPDF({orientation:"landscape"});
     doc.setR2L(true);
 
     doc.addFileToVFS("Rubik-normal.ttf", font);
