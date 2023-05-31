@@ -106,7 +106,7 @@ app.post("/convert", upload.single("file"), async (req, res) => {
 
     doc.setFontSize(12);
 
-    doc.autoTable({ ...csv, styles: { font: "Rubik",halign:"center" } });
+    doc.autoTable({ ...csv,theme:"grid", styles: { font: "Rubik",halign:"right" } });
 
     doc.save(outputPath);
 
