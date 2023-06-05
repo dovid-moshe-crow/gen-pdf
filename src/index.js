@@ -18,9 +18,17 @@ async function parseCSV(csv) {
   const jsonArray = await csvtojson().fromString(csv);
 
   return {
-    head: [Object.keys(jsonArray[0])],
-    body: jsonArray.slice(1).map((x) => Object.values(x)),
+    head: [Object.keys(jsonArray[0]).map(x => !hasHebrew(x) ? x.split("").reverse().join("") : x)],
+    body: jsonArray.slice(1).map((x) => Object.values(x).map(x => !hasHebrew(x) ? x.split("").reverse().join("") : x)),
   };
+}
+
+function hasHebrew(str) {
+  // This regex matches any Hebrew character
+  const hebrewCharRegex = /[\u0590-\u05FF]/;
+
+  // Test the string against the regex
+  return hebrewCharRegex.test(str);
 }
 
 var storage = multer.diskStorage({
@@ -96,7 +104,7 @@ app.post("/convert", upload.single("file"), async (req, res) => {
 
     const csv = await parseCSV(fs.readFileSync(filePath).toString());
 
-    const doc = new jsPDF({orientation:"landscape"});
+    const doc = new jsPDF({ orientation: "landscape" });
     doc.setR2L(true);
 
     doc.addFileToVFS("Rubik-normal.ttf", font);
@@ -106,7 +114,7 @@ app.post("/convert", upload.single("file"), async (req, res) => {
 
     doc.setFontSize(12);
 
-    doc.autoTable({ ...csv,theme:"grid", styles: { font: "Rubik",halign:"right" } });
+    doc.autoTable({ ...csv, theme: "grid", styles: { font: "Rubik", halign: "right" } });
 
     doc.save(outputPath);
 
