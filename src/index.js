@@ -18,8 +18,8 @@ async function parseCSV(csv) {
   const jsonArray = await csvtojson().fromString(csv);
 
   return {
-    head: [Object.keys(jsonArray[0]).map(x => !hasHebrew(x) ? x.split("").reverse().join("") : x)],
-    body: jsonArray.slice(1).map((x) => Object.values(x).map(x => !hasHebrew(x) ? x.split("").reverse().join("") : x)),
+    head: [Object.keys(jsonArray[0]).map(x => !hasHebrew(x) ? x.split("").reverse().join("") : x).reverse()],
+    body: jsonArray.slice(1).map((x) => Object.values(x).map(x => !hasHebrew(x) ? x.split("").reverse().join("") : x).reverse()),
   };
 }
 
