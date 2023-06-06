@@ -104,7 +104,8 @@ app.post("/convert", upload.single("file"), async (req, res) => {
 
     const csv = await parseCSV(fs.readFileSync(filePath).toString());
 
-    const doc = new jsPDF({ orientation: "landscape" });
+    const doc = new jsPDF({ orientation: req.body.orientation == "portrait" ? "portrait" : "landscape" });
+
     doc.setR2L(true);
 
     doc.addFileToVFS("Rubik-normal.ttf", font);
@@ -114,7 +115,18 @@ app.post("/convert", upload.single("file"), async (req, res) => {
 
     doc.setFontSize(12);
 
-    doc.autoTable({ ...csv, theme: "grid", styles: { font: "Rubik", halign: "right" } });
+    doc.autoTable({
+      ...csv, theme: "grid", styles: { font: "Rubik", halign: "right" },
+      startY:doc.autoTable() + (req.body.title ? 70 : 0),
+      didDrawPage: function (data) {
+        if(!req.body.title) return;
+
+        // Header
+        doc.setFontSize(20);
+        doc.setTextColor(40);
+        doc.text(req.body.title,10, 22);
+      }
+    });
 
     doc.save(outputPath);
 
@@ -196,6 +208,7 @@ app.get("/", (req, res) => {
   res.send(`
     <form action="/convert" method="post" enctype="multipart/form-data">
       <input type="file" name="file" accept=".pptx,.docx,.xlsx,.jpg,.png,.gif,.bmp,.tiff,.txt,.csv,.html,.rtf">
+      <input type="text" name="title" />
       <button type="submit">Convert to PDF</button>
     </form>
   `);
