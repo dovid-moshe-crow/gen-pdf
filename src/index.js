@@ -18,8 +18,16 @@ async function parseCSV(csv) {
   const jsonArray = await csvtojson().fromString(csv);
 
   return {
-    head: [Object.keys(jsonArray[0]).map(x => !hasHebrew(x) ? x.split("").reverse().join("") : x).reverse()],
-    body: jsonArray.map((x) => Object.values(x).map(x => !hasHebrew(x) ? x.split("").reverse().join("") : x).reverse()),
+    head: [
+      Object.keys(jsonArray[0])
+        .map((x) => (!hasHebrew(x) ? x.split("").reverse().join("") : x))
+        .reverse(),
+    ],
+    body: jsonArray.map((x) =>
+      Object.values(x)
+        .map((x) => (!hasHebrew(x) ? x.split("").reverse().join("") : x))
+        .reverse()
+    ),
   };
 }
 
@@ -104,7 +112,10 @@ app.post("/convert", upload.single("file"), async (req, res) => {
 
     const csv = await parseCSV(fs.readFileSync(filePath).toString());
 
-    const doc = new jsPDF({ orientation: req.body.orientation == "portrait" ? "portrait" : "landscape" });
+    const doc = new jsPDF({
+      orientation:
+        req.body.orientation == "portrait" ? "portrait" : "landscape",
+    });
 
     doc.setR2L(true);
 
@@ -116,16 +127,22 @@ app.post("/convert", upload.single("file"), async (req, res) => {
     doc.setFontSize(12);
 
     doc.autoTable({
-      ...csv, theme: "grid", styles: { font: "Rubik", halign: "right" },
-      startY:doc.autoTable() + (req.body.title ? 70 : 0),
+      ...csv,
+      theme: "grid",
+      styles: { font: "Rubik", halign: "right" },
+      showHead: "everyPage",
+   
+      margin: { top: 30 },
       didDrawPage: function (data) {
-        if(!req.body.title) return;
+        console.log(data.settings)
+        if (!req.body.title) return;
 
-        // Header
+        var pageWidth = doc.internal.pageSize.width || doc.internal.pageSize.getWidth();
+        
         doc.setFontSize(20);
         doc.setTextColor(40);
-        doc.text(req.body.title,10, 22);
-      }
+        doc.text(req.body.title,pageWidth / 2,20,{align:"center"});
+      },
     });
 
     doc.save(outputPath);
@@ -147,23 +164,7 @@ app.post("/convert", upload.single("file"), async (req, res) => {
       });
     });
 
-    // let doc = new PDFDocument({ margin: 30, size: "A4" });
-    // doc.font("./fonts/Rubik-Regular.ttf");
-
-    ///const csv = await createPDFFromCSV(fs.readFileSync(filePath).toString());
-    // fs.unlinkSync(filePath);
-
-    // await doc.table(csv, {
-    //   prepareHeader: () => doc.font("./fonts/Rubik-Regular.ttf"),
-    //   prepareRow: (row, indexColumn, indexRow, rectRow, rectCell) => {
-    //     doc.font("./fonts/Rubik-Regular.ttf");
-    //   },
-    // });
-
-    // doc.pipe(res);
-    // //done!
-    // doc.end();
-    return; //res.send(csv);
+    return;
   }
 
   const extend = ".pdf";
