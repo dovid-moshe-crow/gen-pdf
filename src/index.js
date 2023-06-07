@@ -129,7 +129,7 @@ app.post("/convert", upload.single("file"), async (req, res) => {
     doc.autoTable({
       ...csv,
       theme: "grid",
-      styles: { font: "Rubik", halign: "right" },
+      styles: { font: "Rubik", halign: "center" },
       showHead: "everyPage",
    
       margin: { top: 30 },
