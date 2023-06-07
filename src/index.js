@@ -134,7 +134,7 @@ app.post("/convert", upload.single("file"), async (req, res) => {
       styles: { font: "Rubik", halign: "center" },
       showHead: "everyPage",
    
-      margin: { top: 30 },
+      margin: !req.body.title ? undefined : { top: 30 },
       didDrawPage: function (data) {
         if (!req.body.title) return;
 
