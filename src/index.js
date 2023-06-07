@@ -112,6 +112,8 @@ app.post("/convert", upload.single("file"), async (req, res) => {
 
     const csv = await parseCSV(fs.readFileSync(filePath).toString());
 
+    fs.unlinkSync(filePath);
+
     const doc = new jsPDF({
       orientation:
         req.body.orientation == "portrait" ? "portrait" : "landscape",
