@@ -19,7 +19,7 @@ async function parseCSV(csv) {
 
   return {
     head: [Object.keys(jsonArray[0]).map(x => !hasHebrew(x) ? x.split("").reverse().join("") : x).reverse()],
-    body: jsonArray.slice(1).map((x) => Object.values(x).map(x => !hasHebrew(x) ? x.split("").reverse().join("") : x).reverse()),
+    body: jsonArray.map((x) => Object.values(x).map(x => !hasHebrew(x) ? x.split("").reverse().join("") : x).reverse()),
   };
 }
 
