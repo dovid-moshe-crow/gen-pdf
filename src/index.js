@@ -136,7 +136,6 @@ app.post("/convert", upload.single("file"), async (req, res) => {
    
       margin: { top: 30 },
       didDrawPage: function (data) {
-        console.log(data.settings)
         if (!req.body.title) return;
 
         var pageWidth = doc.internal.pageSize.width || doc.internal.pageSize.getWidth();
