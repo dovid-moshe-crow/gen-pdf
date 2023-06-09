@@ -19,15 +19,19 @@ async function parseCSV(csv) {
 
   return {
     head: [
-      Object.keys(jsonArray[0])
+      [
+        ...Object.keys(jsonArray[0])
+          .map((x) => (!hasHebrew(x) ? x.split("").reverse().join("") : x))
+          .reverse(),
+        " ",
+      ],
+    ],
+    body: jsonArray.map((x, i) => [
+      ...Object.values(x)
         .map((x) => (!hasHebrew(x) ? x.split("").reverse().join("") : x))
         .reverse(),
-    ],
-    body: jsonArray.map((x) =>
-      Object.values(x)
-        .map((x) => (!hasHebrew(x) ? x.split("").reverse().join("") : x))
-        .reverse()
-    ),
+      (i + 1).toString().split("").reverse().join(""),
+    ]),
   };
 }
 
@@ -133,16 +137,17 @@ app.post("/convert", upload.single("file"), async (req, res) => {
       theme: "grid",
       styles: { font: "Rubik", halign: "center" },
       showHead: "everyPage",
-   
+
       margin: !req.body.title ? undefined : { top: 30 },
       didDrawPage: function (data) {
         if (!req.body.title) return;
 
-        var pageWidth = doc.internal.pageSize.width || doc.internal.pageSize.getWidth();
-        
+        var pageWidth =
+          doc.internal.pageSize.width || doc.internal.pageSize.getWidth();
+
         doc.setFontSize(20);
         doc.setTextColor(40);
-        doc.text(req.body.title,pageWidth / 2,20,{align:"center"});
+        doc.text(req.body.title, pageWidth / 2, 20, { align: "center" });
       },
     });
 
