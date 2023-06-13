@@ -69,12 +69,12 @@ parser.add_argument("-p=", "--port", { help: "the port number" });
 
 const app = express();
 
-const timeoutMiddleware = (req, res, next) => {
-  req.setTimeout(180000); // 3 minutes in milliseconds
-  next();
-};
+// const timeoutMiddleware = (req, res, next) => {
+//   req.setTimeout(180000); // 3 minutes in milliseconds
+//   next();
+// };
 
-app.use(timeoutMiddleware);
+//app.use(timeoutMiddleware);
 
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ limit: "50mb" }));
@@ -116,7 +116,7 @@ app.post("/convert", upload.single("file"), async (req, res) => {
 
     const csv = await parseCSV(fs.readFileSync(filePath).toString());
 
-    fs.unlinkSync(filePath);
+    fs.unlink(filePath);
 
     const doc = new jsPDF({
       orientation:
