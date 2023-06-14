@@ -116,7 +116,11 @@ app.post("/convert", upload.single("file"), async (req, res) => {
 
     const csv = await parseCSV(fs.readFileSync(filePath).toString());
 
-    fs.unlink(filePath);
+    fs.unlink(filePath, (err) => {
+      if (err) {
+        console.error("Error deleting origional file:", err);
+      }
+    });
 
     const doc = new jsPDF({
       orientation:
