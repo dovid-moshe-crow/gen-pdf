@@ -176,7 +176,9 @@ app.post("/convert", upload.single("file"), async (req, res) => {
   const extend = ".pdf";
 
   const file = fs.readFileSync(filePath);
+  console.log("starting to convert")
   libre.convert(file, extend, undefined, (err, done) => {
+    
     if (err) {
       console.log(`Error converting file: ${err}`);
       res.status(500).send("Error converting file");
@@ -184,6 +186,7 @@ app.post("/convert", upload.single("file"), async (req, res) => {
     }
 
     fs.writeFileSync(outputPath, done);
+    console.log("output to file")
 
     // Once the file is converted, delete the original file
     fs.unlink(filePath, (err) => {
