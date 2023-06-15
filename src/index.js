@@ -79,29 +79,7 @@ const app = express();
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ limit: "50mb" }));
 
-app.post("/pdf-table", async (req, res) => {
-  const { data, headers } = req.body;
 
-  // Create a new PDF document
-
-  // Set the response headers for PDF
-  res.setHeader("Content-Type", "application/pdf");
-  res.setHeader("Content-Disposition", "attachment; filename=table.pdf");
-
-  const table = (await import("markdown-table")).markdownTable(
-    [
-      Object.keys(data[0]).map((x) => headers[x]),
-      ...data.map((x) => [...Object.values(x)]),
-    ],
-    { align: "c" }
-  );
-
-  const pdf = await mdToPdf({ content: table });
-  // Create a new page
-
-  // Send the PDF as the response
-  res.send(pdf.content);
-});
 
 app.post("/convert", upload.single("file"), async (req, res) => {
   res.setHeader("Content-Type", "application/pdf");
